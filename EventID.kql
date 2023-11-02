@@ -1,0 +1,24 @@
+let StartId = 6005; //The Event log service was started
+let EndId = 6006; //The Event log service was stopped
+let T = datatable(Timestamp:datetime, EventId:int)
+[
+    datetime(2023-10-01 05:30:12), 6006,
+    datetime(2023-10-01 15:30:12), 6006,
+    datetime(2023-10-02 08:12:35), 6005,
+    datetime(2023-10-02 12:45:50), 6006,
+    datetime(2023-10-03 03:25:43), 6005,
+    datetime(2023-10-03 10:11:23), 6006,
+    datetime(2023-10-05 09:15:48), 6005,
+    datetime(2023-10-06 14:55:05), 6006,
+    datetime(2023-10-07 18:33:38), 6005,
+    datetime(2023-10-08 11:33:38), 6005
+];
+T | where EventId in(StartId, EndId) | order by Timestamp asc 
+| extend NextEndEventTimeStamp =
+    case(EventId == StartId and next(EventId) == EndId,
+        next(Timestamp),
+        datetime(null)
+    )
+| extend Duration = NextEndEventTimeStamp - Timestamp
+| where not(isnull(NextEndEventTimeStamp))
+// | summarize TotalDuration = sum(Duration)
